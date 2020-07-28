@@ -1,0 +1,76 @@
+<html><head><title>New SSL Cert</title><HTA:APPLICATION ID="HTA" APPLICATIONNAME="New SSL Cert" SCROLL="no" SINGLEINSTANCE="yes" ICON="certmgr.dll" MAXIMIZEBUTTON="no" VERSION="1.0"></head>
+<script language="VBScript">
+Dim WSH : Set WSH = CreateObject("WScript.Shell")
+Dim FSO : Set FSO = CreateObject("Scripting.FileSystemObject")
+Dim SHA : Set SHA = CreateObject("Shell.Application")
+Dim Reg : Set Reg = GetObject("winmgmts:{impersonationLevel=impersonate}!\\.\root\default:StdRegProv")
+Reg.CheckAccess &H80000002, "System\CurrentControlSet\Control\CrashControl",2, bHasAccessRight
+If bHasAccessRight = False Then
+	SHA.ShellExecute WSH.ExpandEnvironmentStrings("%WINDIR%") & "\system32\mshta.exe", " """ & document.location.pathname & """", "", "runas"
+	window.close	
+End If
+window.resizeto 600,400
+
+Sub CreateCSR
+	If CN.value = "" Then msgbox "Name is required" : Exit Sub
+	If S.value = "" Then msgbox "Province is required" : Exit Sub
+	If C.value = "" Then msgbox "Country is required" : Exit Sub
+	If L.value = "" Then msgbox "City is required" : Exit Sub
+	If O.value = "" Then msgbox "Organisation is required" : Exit Sub
+	If OU.value = "" Then msgbox "Organisational Unit is required" : Exit Sub
+
+	'more info on parameters: https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/certreq_1
+	CurrentPath = Left(replace(HTA.commandLine,chr(34),""),InStrRev(replace(HTA.commandLine,chr(34),""),"\"))
+	TempINF = WSH.ExpandEnvironmentStrings("%TEMP%") & "\request.inf"
+	Set F = FSO.CreateTextFile(TempINF)
+	F.WriteLine "[Version]"
+	F.WriteLine "Signature=""$Windows NT$"""
+	F.WriteLine "[NewRequest]"
+	F.WriteLine "Subject = ""CN=" & CN.value & ",O=" & O.value & ",OU=" & OU.value & ",S=" & S.value & ",L=" & L.value & ",C=" & C.value & """"
+	F.WriteLine "Exportable = True"
+	F.WriteLine "ProviderName = ""Microsoft Software Key Storage Provider"""
+	For Each Selected in form.Version
+		If Selected.Checked Then
+			If Selected.Value = "RSA" Then F.WriteLine "KeyLength = 2048" & vbcrlf & "KeyAlgorithm = RSA"
+			If Selected.Value = "ECC" Then F.WriteLine "KeyLength = 256" & vbcrlf & "KeyAlgorithm = ECDH_P256"
+		End If
+	Next
+	F.WriteLine "HashAlgorithm = SHA256"
+	F.WriteLine "MachineKeySet = True"
+	F.WriteLine "SMIME = False"
+	F.WriteLine "UseExistingKeySet = False"
+	F.WriteLine "RequestType = PKCS10"
+	F.WriteLine "KeyUsage = 0xA0"
+	F.WriteLine "Silent = True"
+	F.WriteLine "[EnhancedKeyUsageExtension]"
+	F.WriteLine "OID=1.3.6.1.5.5.7.3.1"
+	F.WriteLine "OID=1.3.6.1.5.5.7.3.2"
+	If DNS.Value <> "" Then
+		F.WriteLine "[Extensions]"
+		F.WriteLine "2.5.29.17 = ""{text}"""
+		DNSArray = Split(DNS.Value,";")
+		For i = LBound(DNSArray) To UBound (DNSArray)
+			F.WriteLine "_continue_ = ""dns=" & DNSArray(i) & "&"""
+		Next
+	End If
+	F.Close
+
+	CSR = CurrentPath & CN.value & ".csr"
+	CSR = Replace(CSR,"*","wildcard")
+	WSH.Run "certreq.exe -new " & TempINF & " " & CSR,0,true
+	If FSO.FileExists(CSR) Then MsgBox CSR & " file created"
+	FSO.DeleteFile TempINF
+End Sub
+</script>
+
+<style type="text/css">Body {font-family:Tahoma;font-weight:Bold;font-size:10pt;}</style>
+<body><center><h1>Create a new SSL Certificate</h1><table>
+<tr><td>Name:</td><td><input type="text" size="50" ID="CN" Value=""></td></tr>
+<tr><td>Country:</td><td><input type="text" size="50" ID="C" Value="NL"></td></tr>
+<tr><td>Province:</td><td><input type="text" size="50" ID="S" Value="Zuid-Holland"></td></tr>
+<tr><td>City:</td><td><input type="text" size="50" ID="L" Value=""></td></tr>
+<tr><td>Organisation:</td><td><input type="text" size="50" ID="O" Value=""></td></tr>
+<tr><td>Organisation Unit:</td><td><input type="text" size="50" ID="OU" Value="ICT"></td></tr>
+<tr><td>Optional DNS Names:<br>(separate with ;)</td><td><input type="text" size="50" ID="DNS" Value=""></td></tr>
+<tr><td>Version:</td><td><form name="form"><input type="radio" Name="Version" Value="RSA" CHECKED>RSA (TLS1.2)<input type="radio" Name="Version" Value="ECC">ECC (TLS1.3)</form></td></tr>
+</table><input type="button" Value="Create CSR" OnClick="CreateCSR"></center></body></html>
