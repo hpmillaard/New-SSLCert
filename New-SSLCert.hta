@@ -1,4 +1,4 @@
-<html><head><title>New SSL Cert</title><HTA:APPLICATION ID="HTA" APPLICATIONNAME="New SSL Cert" SCROLL="no" SINGLEINSTANCE="yes" ICON="certmgr.dll" MAXIMIZEBUTTON="no" VERSION="1.0"></head>
+<html><head><title>New SSL Cert</title><HTA:APPLICATION ID="HTA" APPLICATIONNAME="New SSL Cert" SCROLL="no" SINGLEINSTANCE="yes" ICON="certmgr.dll" MAXIMIZEBUTTON="no" VERSION="1.1"></head>
 <script language="VBScript">
 Dim WSH : Set WSH = CreateObject("WScript.Shell")
 Dim FSO : Set FSO = CreateObject("Scripting.FileSystemObject")
@@ -57,7 +57,7 @@ Sub CreateCSR
 
 	CSR = CurrentPath & CN.value & ".csr"
 	CSR = Replace(CSR,"*","wildcard")
-	WSH.Run "certreq.exe -new " & TempINF & " " & CSR,0,true
+	WSH.Run "certreq.exe -new """ & TempINF & """ """ & CSR & """",0,true
 	If FSO.FileExists(CSR) Then MsgBox CSR & " file created"
 	FSO.DeleteFile TempINF
 End Sub
