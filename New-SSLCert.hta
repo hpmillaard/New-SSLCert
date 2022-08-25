@@ -1,4 +1,4 @@
-<html><head><title>New SSL Cert</title><HTA:APPLICATION ID="HTA" APPLICATIONNAME="New SSL Cert" SCROLL="no" SINGLEINSTANCE="yes" ICON="certmgr.dll" MAXIMIZEBUTTON="no" VERSION="1.1"></head>
+<html><head><title>New SSL Cert</title><HTA:APPLICATION ID="HTA" APPLICATIONNAME="New SSL Cert" SCROLL="no" SINGLEINSTANCE="yes" ICON="certmgr.dll" MAXIMIZEBUTTON="no" VERSION="1.2"></head>
 <script language="VBScript">
 Dim WSH : Set WSH = CreateObject("WScript.Shell")
 Dim FSO : Set FSO = CreateObject("Scripting.FileSystemObject")
@@ -12,12 +12,12 @@ End If
 window.resizeto 600,400
 
 Sub CreateCSR
-	If CN.value = "" Then msgbox "Name is required" : Exit Sub
-	If S.value = "" Then msgbox "Province is required" : Exit Sub
-	If C.value = "" Then msgbox "Country is required" : Exit Sub
-	If L.value = "" Then msgbox "City is required" : Exit Sub
-	If O.value = "" Then msgbox "Organisation is required" : Exit Sub
-	If OU.value = "" Then msgbox "Organisational Unit is required" : Exit Sub
+	If CN.value = "" Then msgbox "Name is required" : Exit Sub : Else strCN = "CN=" & CN.Value
+	If S.value <> "" Then strCN = strCN & ",S=" & S.Value
+	If C.value <> "" Then strCN = strCN & ",C=" & C.Value
+	If L.value <> "" Then strCN = strCN & ",L=" & L.Value
+	If O.value <> "" Then strCN = strCN & ",O=" & O.Value
+	If OU.value <> "" Then strCN = strCN & ",OU=" & OU.Value
 
 	'more info on parameters: https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/certreq_1
 	CurrentPath = Left(replace(HTA.commandLine,chr(34),""),InStrRev(replace(HTA.commandLine,chr(34),""),"\"))
@@ -26,7 +26,7 @@ Sub CreateCSR
 	F.WriteLine "[Version]"
 	F.WriteLine "Signature=""$Windows NT$"""
 	F.WriteLine "[NewRequest]"
-	F.WriteLine "Subject = ""CN=" & CN.value & ",O=" & O.value & ",OU=" & OU.value & ",S=" & S.value & ",L=" & L.value & ",C=" & C.value & """"
+	F.WriteLine "Subject = """ & strCN & """"
 	F.WriteLine "Exportable = True"
 	F.WriteLine "ProviderName = ""Microsoft Software Key Storage Provider"""
 	For Each Selected in form.Version
@@ -65,12 +65,12 @@ End Sub
 
 <style type="text/css">Body {font-family:Tahoma;font-weight:Bold;font-size:10pt;}</style>
 <body><center><h1>Create a new SSL Certificate</h1><table>
-<tr><td>Name:</td><td><input type="text" size="50" ID="CN" Value=""></td></tr>
-<tr><td>Country:</td><td><input type="text" size="50" ID="C" Value="NL"></td></tr>
-<tr><td>Province:</td><td><input type="text" size="50" ID="S" Value="Zuid-Holland"></td></tr>
-<tr><td>City:</td><td><input type="text" size="50" ID="L" Value=""></td></tr>
-<tr><td>Organisation:</td><td><input type="text" size="50" ID="O" Value=""></td></tr>
-<tr><td>Organisation Unit:</td><td><input type="text" size="50" ID="OU" Value="ICT"></td></tr>
-<tr><td>Optional DNS Names:<br>(separate with ;)</td><td><input type="text" size="50" ID="DNS" Value=""></td></tr>
+<tr><td>Name:</td><td><input type="text" size="50" ID="CN"></td></tr>
+<tr><td>Country:</td><td><input type="text" size="50" ID="C"></td></tr>
+<tr><td>Province:</td><td><input type="text" size="50" ID="S"></td></tr>
+<tr><td>City:</td><td><input type="text" size="50" ID="L"></td></tr>
+<tr><td>Organisation:</td><td><input type="text" size="50" ID="O"></td></tr>
+<tr><td>Organisation Unit:</td><td><input type="text" size="50" ID="OU"></td></tr>
+<tr><td>Optional DNS Names:<br>(separate with ;)</td><td><input type="text" size="50" ID="DNS"></td></tr>
 <tr><td>Version:</td><td><form name="form"><input type="radio" Name="Version" Value="RSA" CHECKED>RSA (TLS1.2)<input type="radio" Name="Version" Value="ECC">ECC (TLS1.3)</form></td></tr>
 </table><input type="button" Value="Create CSR" OnClick="CreateCSR"></center></body></html>
