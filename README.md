@@ -3,7 +3,7 @@ To create a new SSL Cert on Windows with SHA256 or ECC, you have to follow a wiz
 
 To make this easier, I've created this script so you can create the CSR with just one window.
 
-This is an HTA (HTML Application) file and can be run directly on Windows.
+This is an HTA (HTML Application) file and can be run directly on Windows. There is also a powershell version available that asks the user for the same input.
 
 If you want to run this from the commandline, you can use mshta.exe New-SSLCert.hta
 
