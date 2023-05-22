@@ -10,3 +10,5 @@ If you want to run this from the commandline, you can use mshta.exe New-SSLCert.
 Example screenshot:
 
 ![New-SSLCert.hta screenshot](https://github.com/hpmillaard/New-SSLCert/blob/master/New-SSLCert.png?raw=true)
+
+After you've received the certificate from the CA, you can use the import-cer-export-pfx.ps1 script to import the received certificate to the personal store of your computer and export the certificate to a PFX file. You will be asked to point explorer to the cer file, where you want to save the pfx and what password you want to set on the pfx file.
